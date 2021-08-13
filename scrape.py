@@ -37,5 +37,3 @@ def words(extracts):
     for text in extracts:
         words.extend(filter(lambda w: LOWERCASE.match(w) and len(w)>5, re.split("\W+", text.lower())))
     return words
-
-print(words(query()))

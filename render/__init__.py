@@ -12,7 +12,7 @@ PINK = (236/0xff, 173/0xff, 206/0xff)
 SECONDS_PER_WORD = 2
 
 from render.physics import Particle, Universe
-from generate import generate_word
+from data.generate import generate_word
 
 class Renderer:
     def __init__(self, w, h):

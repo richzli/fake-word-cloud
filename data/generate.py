@@ -4,7 +4,7 @@ An attempt at generating fake words.
 The idea is based on the idea of Markov chains - given the last 2 letters, what is the most likely next letter?
 Obviously this isn't perfect, but it's pretty simple to implement and train.
 """
-import train
+import data.train as train
 train.read_from_file()
 length_prefix = [0]
 for l in train.lengths:

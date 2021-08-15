@@ -31,6 +31,7 @@ class Renderer:
         
         glutDisplayFunc(self.showScreen)
         glutIdleFunc(self.showScreen)
+        glutReshapeFunc(self.resize)
         glutMainLoop()
 
     def point(self, wd):
@@ -51,11 +52,17 @@ class Renderer:
         glVertex2f(x-s, y+t)
         glEnd()
 
+    def resize(self, ww, hh):
+        self.w = ww
+        self.h = hh
+        self.univ.maxx = ww
+        self.univ.maxy = hh
+
     def iterate(self):
         glViewport(0, 0, self.w, self.h)
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
-        glOrtho(0.0, 500, 0.0, 500, 0.0, 1.0)
+        glOrtho(0.0, self.w, 0.0, self.h, 0.0, 1.0)
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
 

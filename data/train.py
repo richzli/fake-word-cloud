@@ -37,7 +37,7 @@ def read_from_file(filename="data.json"):
         lengths = data["lengths"]
 
 if __name__ == "__main__":
-    import scrape as scrape
+    import scrape
     import time
     for i in range(100):
         print(f"On iteration {i+1}")

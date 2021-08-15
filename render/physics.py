@@ -1,10 +1,11 @@
 import random, math
 from render import BLACK
+from render.word import Word
 
 WALL_WT = 20
-F_COEFF = 1000
-DRAG_COEFF = 0.005
-RNDM_COEFF = 0.1
+F_COEFF = 40000
+DRAG_COEFF = 0.05
+RNDM_COEFF = 100
 SECS_PER_SEC = 1
 
 def sign(x):
@@ -16,31 +17,29 @@ class Universe:
     def __init__(self, x, y):
         self.maxx = x
         self.maxy = y
-        self.points = []
-        self.colors = []
-        self.exists = []
+        self.ids = 0
+        self.words = {}
     
-    def add_point(self, p, c=BLACK):
-        self.points.append(p)
-        self.colors.append(c)
-        self.exists.append(True)
+    def add_word(self, p, w, c=BLACK):
+        self.ids += 1
+        self.words[self.ids] = Word(p, w, c)
     
     def shrink_points(self):
-        for i in range(len(self.points)):
-            if self.points[i].mass > 1:
-                self.points[i].mass -= 1
+        for i in self.words:
+            if self.words[i].point.mass > 5:
+                self.words[i].point.mass -= 2
 
     def calculate_forces(self):
-        for i in range(len(self.points)):
-            if not self.exists[i]:
+        for i in self.words:
+            if not self.words[i].exists:
                 continue
-            p = self.points[i]
-            for j in range(len(self.points)):
-                q = self.points[j]
-                if i != j and self.exists[j]:
+            p = self.words[i].point
+            for j in self.words:
+                q = self.words[j].point
+                if i != j and self.words[j].exists:
                     p.forces.append(p.force(q))
         
-            if p.mass > 3:
+            if p.mass > 5:
                 p.forces.append(p.wall_force("x", WALL_WT, 0))
                 p.forces.append(p.wall_force("x", WALL_WT, self.maxx))
                 p.forces.append(p.wall_force("y", WALL_WT, 0))
@@ -50,13 +49,14 @@ class Universe:
     
     def calculate_tick(self, dt):
         self.calculate_forces()
-        for i in range(len(self.points)):
-            p = self.points[i]
+        for i in list(self.words.keys()):
+            p = self.words[i].point
             p.apply_tick(dt)
             if not (0 <= p.x <= self.maxx and 0 <= p.y <= self.maxy):
-                self.exists[i] = False
+                p.exists = False
+                del self.words[i]
             else:
-                self.exists[i] = True
+                p.point = True
 
 class Particle:
     def __init__(self, x, y, vx = 0, vy = 0, mass = 5, fixed = False):
@@ -84,9 +84,9 @@ class Particle:
         return (self.dx(p)*magnitude/self.dist(p), self.dy(p)*magnitude/self.dist(p))
     
     def wall_force(self, axis, wt, pos):
-        if axis == "x":
+        if axis == "x" and self.x != pos:
             return (F_COEFF * sign(self.x-pos) * self.mass * wt / (self.x - pos)**2, 0)
-        elif axis == "y":
+        elif axis == "y" and self.y != pos:
             return (0, F_COEFF * sign(self.y-pos) * self.mass * wt / (self.y - pos)**2)
         else:
             return (0, 0)

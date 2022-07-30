@@ -1,11 +1,11 @@
 import random, math
-from render import BLACK
-from render.word import Word
+
+from OpenGL.GL import *
 
 WALL_WT = 20
 F_COEFF = 40000
-DRAG_COEFF = 0.05
-RNDM_COEFF = 100
+DRAG_COEFF = 0.001
+RNDM_COEFF = 400
 SECS_PER_SEC = 1
 
 def sign(x):
@@ -17,26 +17,20 @@ class Universe:
     def __init__(self, x, y):
         self.maxx = x
         self.maxy = y
-        self.ids = 0
-        self.words = {}
+        self.points = []
     
-    def add_word(self, p, w, c=BLACK):
-        self.ids += 1
-        self.words[self.ids] = Word(p, w, c)
+    def add_point(self, p):
+        self.points.append(p)
     
     def shrink_points(self):
-        for i in self.words:
-            if self.words[i].point.mass > 5:
-                self.words[i].point.mass -= 2
+        for p in self.points:
+            if p.mass > 5:
+                p.mass -= 2
 
     def calculate_forces(self):
-        for i in self.words:
-            if not self.words[i].exists:
-                continue
-            p = self.words[i].point
-            for j in self.words:
-                q = self.words[j].point
-                if i != j and self.words[j].exists:
+        for p in self.points:
+            for q in self.points:
+                if q.exists:
                     p.forces.append(p.force(q))
         
             if p.mass > 5:
@@ -49,14 +43,14 @@ class Universe:
     
     def calculate_tick(self, dt):
         self.calculate_forces()
-        for i in list(self.words.keys()):
-            p = self.words[i].point
+        for p in self.points:
             p.apply_tick(dt)
             if not (0 <= p.x <= self.maxx and 0 <= p.y <= self.maxy):
                 p.exists = False
-                del self.words[i]
             else:
-                p.point = True
+                p.exists = True
+        
+        self.points = list(filter(lambda p: p.exists, self.points))
 
 class Particle:
     def __init__(self, x, y, vx = 0, vy = 0, mass = 5, fixed = False):
@@ -67,6 +61,7 @@ class Particle:
         self.mass = mass
         self.fixed = fixed
         self.forces = []
+        self.exists = True
 
     def dx(self, p):
         return self.x - p.x
@@ -92,7 +87,7 @@ class Particle:
             return (0, 0)
 
     def drag_force(self):
-        return (-self.vx*abs(self.vx)*DRAG_COEFF, -self.vy*abs(self.vy)*DRAG_COEFF)
+        return (-self.vx*self.mass*min(abs(self.vx)*DRAG_COEFF, 1), -self.vy*self.mass*min(abs(self.vy)*DRAG_COEFF, 1))
 
     def random_force(self):
         magnitude = random.random() * self.mass * RNDM_COEFF
@@ -115,3 +110,12 @@ class Particle:
 
         self.forces.clear()
 
+    def draw(self):
+        glColor3f(0, 0, 0)
+        
+        glBegin(GL_QUADS)
+        glVertex2f(self.x-self.mass, self.y-self.mass)
+        glVertex2f(self.x+self.mass, self.y-self.mass)
+        glVertex2f(self.x+self.mass, self.y+self.mass)
+        glVertex2f(self.x-self.mass, self.y+self.mass)
+        glEnd()

@@ -9,9 +9,11 @@ PURP_1 = (148/0xff, 131/0xff, 192/0xff)
 PURP_2 = (209/0xff, 199/0xff, 235/0xff)
 PINK = (236/0xff, 173/0xff, 206/0xff)
 
+MAX_HEIGHT = 50
 SECONDS_PER_WORD = 2
 
 from render.physics import Particle, Universe
+from render.word import *
 from data.generate import generate_word
 
 class Renderer:
@@ -34,24 +36,6 @@ class Renderer:
         glutReshapeFunc(self.resize)
         glutMainLoop()
 
-    def point(self, wd):
-        p = wd.point
-        color = wd.color
-
-        x = int(p.x)
-        y = int(p.y)
-
-        s = p.mass*len(wd.word)//6
-        t = p.mass//2
-
-        glColor3f(*color)
-        glBegin(GL_QUADS)
-        glVertex2f(x-s, y-t)
-        glVertex2f(x+s, y-t)
-        glVertex2f(x+s, y+t)
-        glVertex2f(x-s, y+t)
-        glEnd()
-
     def resize(self, ww, hh):
         self.w = ww
         self.h = hh
@@ -72,22 +56,22 @@ class Renderer:
         glLoadIdentity()
         self.iterate()
 
-        for i in self.univ.words:
-            self.point(self.univ.words[i])
+        for p in self.univ.points:
+            p.draw()
         now = glutGet(GLUT_ELAPSED_TIME)
         if self.lastframe != -1:
             self.univ.calculate_tick((now-self.lastframe)/1000)
         if self.lastword == -1 or (now-self.lastword)/1000 > SECONDS_PER_WORD:
             self.univ.shrink_points()
-            self.univ.add_word(
-                Particle((self.w+random.random()*20)//2, (self.h+random.random()*20)//2, 
-                    mass=random.randint(10, 50),
+            self.univ.add_point(
+                Word((self.w+random.random()*20)//2, (self.h+random.random()*20)//2, 
+                    mass=50,
                     vx=random.randint(-5, 5),
                     vy=random.randint(-5, 5),
-                    fixed=False
-                ),
-                generate_word(),
-                random.choice((BLACK, PURP_1, PURP_2, PINK))
+                    fixed=False,
+                    word=generate_word(),
+                    color=random.choice((BLACK, PURP_1, PURP_2, PINK))
+                )
             )
             self.lastword = now
         self.lastframe = now

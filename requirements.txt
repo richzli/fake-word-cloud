@@ -1,3 +1,4 @@
 freetype-py
 PyOpenGL
 PyOpenGL_accelerate
+PyGLM

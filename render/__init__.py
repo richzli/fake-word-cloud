@@ -1,4 +1,5 @@
 import random
+import glm
 
 from OpenGL.GL import *
 from OpenGL.GLUT import *
@@ -13,8 +14,12 @@ MAX_HEIGHT = 50
 SECONDS_PER_WORD = 2
 
 from render.physics import Particle, Universe
-from render.word import *
+from render.word import Word
+import render.word as word
 from data.generate import generate_word
+
+def onDebugMessage(*args, **kwargs):
+    print('args = {0}, kwargs = {1}'.format(args, kwargs))
 
 class Renderer:
     def __init__(self, w, h):
@@ -30,7 +35,8 @@ class Renderer:
         self.window = glutCreateWindow("fake word cloud")
 
         self.univ = Universe(self.w, self.h)
-        
+        word.init()
+
         glutDisplayFunc(self.showScreen)
         glutIdleFunc(self.showScreen)
         glutReshapeFunc(self.resize)
@@ -42,19 +48,13 @@ class Renderer:
         self.univ.maxx = ww
         self.univ.maxy = hh
 
-    def iterate(self):
-        glViewport(0, 0, self.w, self.h)
-        glMatrixMode(GL_PROJECTION)
-        glLoadIdentity()
-        glOrtho(0.0, self.w, 0.0, self.h, 0.0, 1.0)
-        glMatrixMode(GL_MODELVIEW)
-        glLoadIdentity()
-
     def showScreen(self):
         glClearColor(245/0xff, 241/0xff, 255/0xff, 1.0)
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-        glLoadIdentity()
-        self.iterate()
+        glClear(GL_COLOR_BUFFER_BIT)
+
+        glUseProgram(word.shader_program)
+        proj = glm.ortho(0, self.w, 0, self.h)
+        glUniformMatrix4fv(glGetUniformLocation(word.shader_program, "projection"), 1, GL_FALSE, glm.value_ptr(proj))
 
         for p in self.univ.points:
             p.draw()
@@ -64,7 +64,7 @@ class Renderer:
         if self.lastword == -1 or (now-self.lastword)/1000 > SECONDS_PER_WORD:
             self.univ.shrink_points()
             self.univ.add_point(
-                Word((self.w+random.random()*20)//2, (self.h+random.random()*20)//2, 
+                Word((self.w+random.random()*20)//2, (self.h+random.random()*20)//2,
                     mass=50,
                     vx=random.randint(-5, 5),
                     vy=random.randint(-5, 5),

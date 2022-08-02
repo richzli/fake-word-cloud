@@ -155,9 +155,6 @@ class Word(Particle):
         y = int(self.y)-self.height // 2
         pt = self.mass
 
-        # self.draw_rect()
-        # print(f"{self.word} {self.x} {self.y} {self.color}")
-
         glUseProgram(shader_program)
         glUniform3f(glGetUniformLocation(shader_program, "textColor"), *self.color)
         glActiveTexture(GL_TEXTURE0)

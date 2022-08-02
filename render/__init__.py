@@ -47,6 +47,7 @@ class Renderer:
         self.h = hh
         self.univ.maxx = ww
         self.univ.maxy = hh
+        glViewport(0, 0, ww, hh)
 
     def showScreen(self):
         glClearColor(245/0xff, 241/0xff, 255/0xff, 1.0)

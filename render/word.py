@@ -38,7 +38,7 @@ uniform vec3 textColor;
 
 void main()
 {    
-    vec4 sampled = vec4(1.0, 1.0, 1.0, 1.0);//texture(text, TexCoords).r);
+    vec4 sampled = vec4(1.0, 1.0, 1.0, texture(text, TexCoords).r);
     color = vec4(textColor, 1.0) * sampled;
 }
 """
@@ -61,7 +61,7 @@ def init():
     glActiveTexture(GL_TEXTURE0)
     for i in range(1, MAX_HEIGHT+1):
         font.set_pixel_sizes(0, i)
-        for c in range(128):
+        for c in range(ord("a"), ord("z")+1):
             ch = chr(c)
             font.load_char(ch, freetype.FT_LOAD_RENDER)
 
@@ -91,9 +91,9 @@ def init():
             )
 
     # blending
-    # glEnable(GL_CULL_FACE)
-    # glEnable(GL_BLEND)
-    # glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+    glEnable(GL_CULL_FACE)
+    glEnable(GL_BLEND)
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
     # shaders
     vertex_shader = shaders.compileShader(vertex_shader_text, GL_VERTEX_SHADER)
@@ -107,7 +107,7 @@ def init():
     glBindVertexArray(vao)
     glBindBuffer(GL_ARRAY_BUFFER, vbo)
     glBufferData(GL_ARRAY_BUFFER, float_size * 6 * 4, None, GL_DYNAMIC_DRAW)
-    glVertexAttribPointer(0, 4, GL_FLOAT, False, 4 * float_size, 0)
+    glVertexAttribPointer(0, 4, GL_FLOAT, False, 4 * float_size, None)
     glEnableVertexAttribArray(0)
     glBindBuffer(GL_ARRAY_BUFFER, 0)
     glBindVertexArray(0)
@@ -181,9 +181,10 @@ class Word(Particle):
                 xx + w, yy + h, 1.0, 0.0
             ], dtype=numpy.float32)
 
+            float_size = vertices.itemsize
             glBindTexture(GL_TEXTURE_2D, ch.texture)
             glBindBuffer(GL_ARRAY_BUFFER, vbo)
-            glBufferSubData(GL_ARRAY_BUFFER, 0, vertices.size, vertices)
+            glBufferSubData(GL_ARRAY_BUFFER, 0, float_size * vertices.size, vertices)
             glBindBuffer(GL_ARRAY_BUFFER, 0)
 
             glDrawArrays(GL_TRIANGLES, 0, 6)
